@@ -402,7 +402,16 @@ class zImage:
             
             from zAI.models.face_detection import detect_face
             import tensorflow as tf
-   
+            from zAI.utils import downloads
+
+            # Download models if necessary
+            downloads.maybe_download('det1.npy',os.path.join(os.path.dirname(__file__),'models/face_detection'),
+                            'https://www.dropbox.com/s/12fe6ffqwz1gj33/det1.npy?dl=1')
+            downloads.maybe_download('det2.npy',os.path.join(os.path.dirname(__file__),'models/face_detection'),
+                            'https://www.dropbox.com/s/dawrqabriwl4msa/det2.npy?dl=1')
+            downloads.maybe_download('det3.npy',os.path.join(os.path.dirname(__file__),'models/face_detection'),
+                            'https://www.dropbox.com/s/ldx2os17lyydzkw/det3.npy?dl=1')
+            
             # Set up Tensorflow session and create neural network
             with tf.Graph().as_default():
                 gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=1.0)
