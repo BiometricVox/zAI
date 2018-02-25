@@ -405,19 +405,17 @@ class zImage:
             from zAI.utils import downloads
 
             # Download models if necessary
-            downloads.maybe_download('det1.npy',os.path.join(os.path.dirname(__file__),'models/face_detection'),
-                            'https://www.dropbox.com/s/12fe6ffqwz1gj33/det1.npy?dl=1')
-            downloads.maybe_download('det2.npy',os.path.join(os.path.dirname(__file__),'models/face_detection'),
-                            'https://www.dropbox.com/s/dawrqabriwl4msa/det2.npy?dl=1')
-            downloads.maybe_download('det3.npy',os.path.join(os.path.dirname(__file__),'models/face_detection'),
-                            'https://www.dropbox.com/s/ldx2os17lyydzkw/det3.npy?dl=1')
+            target_folder = 'face_detection'
+            model_dir = downloads.maybe_download('det1.npy',target_folder,'https://www.dropbox.com/s/12fe6ffqwz1gj33/det1.npy?dl=1')
+            model_dir = downloads.maybe_download('det2.npy',target_folder,'https://www.dropbox.com/s/dawrqabriwl4msa/det2.npy?dl=1')
+            model_dir = downloads.maybe_download('det3.npy',target_folder,'https://www.dropbox.com/s/ldx2os17lyydzkw/det3.npy?dl=1')
             
             # Set up Tensorflow session and create neural network
             with tf.Graph().as_default():
                 gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=1.0)
                 sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options, log_device_placement=False))
                 with sess.as_default():
-                    pnet, rnet, onet = detect_face.create_mtcnn(sess, None)
+                    pnet, rnet, onet = detect_face.create_mtcnn(sess, model_dir)
             
             minsize = 20 # minimum size of face
             threshold = [ 0.6, 0.7, 0.7 ]  # three steps's threshold
@@ -514,8 +512,10 @@ class zImage:
         from zAI.models.art import neural_style
         from zAI.utils import downloads
         
-        model_file = downloads.maybe_download('imagenet-vgg-verydeep-19.mat',os.path.join(os.path.dirname(__file__),'models/art/models'),
+        target_folder = 'models'
+        model_dir = downloads.maybe_download('imagenet-vgg-verydeep-19.mat',target_folder,
                             'http://www.vlfeat.org/matconvnet/models/imagenet-vgg-verydeep-19.mat')
+        model_file = os.path.join(model_dir,'imagenet-vgg-verydeep-19.mat')
                 
         
         # TO-DO: What if it is a zFace?

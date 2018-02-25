@@ -77,6 +77,7 @@ Any contribution to zAI is very welcome. In particular, as we are not software d
 zAI is a side project of the R&D Team at [Biometric Vox](http://www.biometricvox.com) and is not an official Biometric Vox product.
 
 Face detection and comparison uses code from: [davidsandberg](https://github.com/davidsandberg/facenet)
+
 Image neural style uses code from: [cysmith](https://github.com/cysmith/neural-style-tf)
 
 

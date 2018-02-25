@@ -56,9 +56,8 @@ class zFace(zImage):
         from .models.facenet import facenet
         from zAI.utils import downloads
 
-        model_dir = os.path.join(os.path.dirname(__file__),'models/facenet/models/20170512-110547')
-        
-        downloads.maybe_download_and_unzip('20170512-110547.zip',os.path.join(os.path.dirname(__file__),'models/facenet/models'),'20170512-110547','https://www.dropbox.com/s/h8nxpvjpon12g9c/20170512-110547.zip?dl=1')
+        target_folder = 'facenet'
+        model_dir = downloads.maybe_download_and_unzip('20170512-110547.zip',target_folder,'20170512-110547','https://www.dropbox.com/s/h8nxpvjpon12g9c/20170512-110547.zip?dl=1')
 
         image_size = 160
         
@@ -77,7 +76,7 @@ class zFace(zImage):
             with tf.Session() as sess:
               
                 # Load the model
-                facenet.load_model(model_dir+'/20170512-110547.pb')
+                facenet.load_model(model_dir+'/20170512-110547/20170512-110547.pb')
                 
                 # Get input and output tensors
                 images_placeholder = tf.get_default_graph().get_tensor_by_name("input:0")
