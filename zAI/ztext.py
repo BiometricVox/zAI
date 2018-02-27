@@ -300,7 +300,7 @@ class zText:
         '''
         if lang is not None:
             if lang not in ISO639_1_CODES:
-                raise Exception('Invalid language provided. lang must be an ISO639-1 code. See https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes for a complete list')
+                raise ValueError('Invalid language provided. lang must be an ISO639-1 code. See https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes for a complete list')
     
     def __request_google_translate__(self,targetLang='es'):
         '''
@@ -315,21 +315,21 @@ class zText:
             request['source'] = sourceLang
         
         data=json.dumps(request)
-        try:
-            conn= HTTPSConnection('translation.googleapis.com')
-            conn.request('POST','/language/translate/v2?key=%s' % GOOGLE_CLOUD_API_KEY, data, {'Content-Type': 'application/json'})
-            response = conn.getresponse()
-            if response.status == 200:
-                data = response.read()
-                data = json.loads(data)
-                data = data['data']['translations'][0]
-                conn.close()
-                return data
-            else:
-                raise Exception('Request failed')
-        except Exception as e:
-            print('Error:')
-            print(e)
+        
+        conn= HTTPSConnection('translation.googleapis.com')
+        conn.request('POST','/language/translate/v2?key=%s' % GOOGLE_CLOUD_API_KEY, data, {'Content-Type': 'application/json'})
+        response = conn.getresponse()
+        
+        data = response.read()
+        data = json.loads(data)
+        conn.close()
+            
+        if response.status == 200:
+            data = data['data']['translations'][0]
+            return data
+        else:
+            raise Exception('Request failed. Message: ' + data['error']['message'])
+
             
     def __request_microsoft_translator__(self,translateUrl,headers,params):
         '''
@@ -339,20 +339,15 @@ class zText:
         import requests
         
         # Perform request and extract response
-        try:           
-            translateUrl = translateUrl + "?%s" % params
-            response = requests.get(translateUrl, headers = headers)
-            
-            if response.status_code == 200:
-                data = ElementTree.fromstring(response.text.encode('utf-8'))
-                return data.text
-            else:
-                raise Exception('Request failed')
+        translateUrl = translateUrl + "?%s" % params
+        response = requests.get(translateUrl, headers = headers)
         
-        except Exception as e:
-            print('Error:')
-            print(e)
-    
+        if response.status_code == 200:
+            data = ElementTree.fromstring(response.text.encode('utf-8'))
+            return data.text
+        else:
+            raise Exception('Request failed')
+        
         
     def translate(self,targetLang='es',backend=zAI_BACKEND):
         '''
@@ -426,7 +421,7 @@ class zText:
         elif backend == 'local':
             raise NotImplementedError("tanslate method is currently not available with local backend")
         else:
-            raise Exception('invalid backend selection. Valid values are currently "Google", "Microsoft" or "local".')
+            raise ValueError('invalid backend selection. Valid values are currently "Google", "Microsoft" or "local".')
         
     
     def detect_language(self,backend=zAI_BACKEND):
@@ -482,7 +477,7 @@ class zText:
         elif backend == 'local':
             raise NotImplementedError("tanslate method is currently not available with local backend")
         else:
-            raise Exception('invalid backend selection. Valid values are currently "Google", "Microsoft" or "local".')
+            raise ValueError('invalid backend selection. Valid values are currently "Google", "Microsoft" or "local".')
             
     def to_voice(self,outputFile,gender=None,backend=zAI_BACKEND):
         '''
@@ -526,7 +521,7 @@ class zText:
         elif backend == 'Microsoft':
             
             if self.lang not in AZURE_TTS_DATA:
-                raise Exception('Conversion to speech is not supported for this backend and language: %s' % ISO639_1_CODES[self.lang])
+                raise ValueError('Conversion to speech is not supported for this backend and language: %s' % ISO639_1_CODES[self.lang])
                 
             inputData = AZURE_TTS_DATA[self.lang]
             
@@ -537,58 +532,54 @@ class zText:
                     inputData = inputData['male']
             else:
                 if gender not in inputData:
-                    raise Exception('This combination of backend and language does not support a %s voice' % gender)
+                    raise ValueError('This combination of backend and language does not support a %s voice' % gender)
                 
                 inputData = inputData[gender]
                 
-            try:
-                params = ""
-                headers = {"Ocp-Apim-Subscription-Key": MICROSOFT_AZURE_BING_VOICE_API_KEY}
             
-                AccessTokenHost = "api.cognitive.microsoft.com"
-                path = "/sts/v1.0/issueToken"
+            params = ""
+            headers = {"Ocp-Apim-Subscription-Key": MICROSOFT_AZURE_BING_VOICE_API_KEY}
+        
+            AccessTokenHost = "api.cognitive.microsoft.com"
+            path = "/sts/v1.0/issueToken"
+        
+            conn = HTTPSConnection(AccessTokenHost)
+            conn.request("POST", path, params, headers)
+            response = conn.getresponse()
+            data = response.read()
+            conn.close()
+            accesstoken = data.decode("UTF-8")
+        
+            body = ElementTree.Element('speak', version='1.0')
+            body.set('{http://www.w3.org/XML/1998/namespace}lang', inputData['locale'].lower())
+            voice = ElementTree.SubElement(body, 'voice')
+            voice.set('{http://www.w3.org/XML/1998/namespace}lang', inputData['locale'])
+            voice.set('{http://www.w3.org/XML/1998/namespace}gender', inputData['gender'])
+            voice.set('name', inputData['name'])
+            voice.text = self.text
             
-                conn = HTTPSConnection(AccessTokenHost)
-                conn.request("POST", path, params, headers)
-                response = conn.getresponse()
-                data = response.read()
-                conn.close()
-                accesstoken = data.decode("UTF-8")
+            headers = {"Content-type": "application/ssml+xml", 
+            			"X-Microsoft-OutputFormat": "riff-16khz-16bit-mono-pcm", 
+            			"Authorization": "Bearer " + accesstoken, 
+            			"User-Agent": "zAI"}
             
-                body = ElementTree.Element('speak', version='1.0')
-                body.set('{http://www.w3.org/XML/1998/namespace}lang', inputData['locale'].lower())
-                voice = ElementTree.SubElement(body, 'voice')
-                voice.set('{http://www.w3.org/XML/1998/namespace}lang', inputData['locale'])
-                voice.set('{http://www.w3.org/XML/1998/namespace}gender', inputData['gender'])
-                voice.set('name', inputData['name'])
-                voice.text = self.text
-                
-                headers = {"Content-type": "application/ssml+xml", 
-                			"X-Microsoft-OutputFormat": "riff-16khz-16bit-mono-pcm", 
-                			"Authorization": "Bearer " + accesstoken, 
-                			"User-Agent": "zAI"}
-                
-                conn = HTTPSConnection("speech.platform.bing.com")
-                conn.request("POST", "/synthesize", ElementTree.tostring(body), headers)
-                response = conn.getresponse()
-            
-                data = response.read()
-                conn.close()
-                if response.status == 200:
-                    with open(outputFile, "wb") as wavfile:
-                        wavfile.write(bytes(data))
-                else:
-                    raise ValueError('Request failed: %s' % response.reason)
-                    
-            except Exception as e:
-                print('Error:')
-                print(e)
-            
+            conn = HTTPSConnection("speech.platform.bing.com")
+            conn.request("POST", "/synthesize", ElementTree.tostring(body), headers)
+            response = conn.getresponse()
+        
+            data = response.read()
+            conn.close()
+            if response.status == 200:
+                with open(outputFile, "wb") as wavfile:
+                    wavfile.write(bytes(data))
+            else:
+                raise Exception('Request failed: %s' % response.reason)
+                               
             
         elif backend == 'local':
             raise NotImplementedError("tanslate method is currently not available with local backend")
         else:
-            raise Exception('invalid backend selection. Valid values are currently "Google", "Microsoft" or "local".')
+            raise ValueError('invalid backend selection. Valid values are currently "Google", "Microsoft" or "local".')
             
     @staticmethod
     def set_backend_key(key_name, new_key):
@@ -597,6 +588,6 @@ class zText:
         if key_name in available_keys:
             exec('%s = "%s"' %(key_name, new_key), globals())
         else:
-            raise Exception('%s is not available.' % key_name)
+            raise ValueError('%s is not a valid key name.' % key_name)
         
         

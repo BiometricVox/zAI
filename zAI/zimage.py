@@ -140,21 +140,18 @@ class zImage:
         data = json.dumps({'requests': request})
 
         # Perform request and extract response
-        try:
-            conn = HTTPSConnection('vision.googleapis.com')
-            conn.request('POST','/v1/images:annotate?key=%s' % GOOGLE_CLOUD_API_KEY, data, {'Content-Type': 'application/json'})
-            response = conn.getresponse()
-            
-            if response.status == 200:
-                data = response.read()
-                data = json.loads(data)
-                conn.close()
-                return data
-            else:
-                raise Exception('Request failed')
-        except Exception as e:
-            print('Error:')
-            print(e)
+        conn = HTTPSConnection('vision.googleapis.com')
+        conn.request('POST','/v1/images:annotate?key=%s' % GOOGLE_CLOUD_API_KEY, data, {'Content-Type': 'application/json'})
+        response = conn.getresponse()
+        
+        data = response.read()
+        data = json.loads(data)
+        conn.close()
+        
+        if response.status == 200:
+            return data
+        else:
+            raise Exception('Request failed. Message: ' + data['error']['message'])
             
     def __request_azure__(self,endpoint,headers,params):
         '''
@@ -162,22 +159,19 @@ class zImage:
         '''
         
         # Perform request and extract response
-        try:
-            conn = HTTPSConnection(MICROSOFT_AZURE_URL)
-            conn.request("POST", endpoint+"?%s" % params, self.data, headers)
-            response = conn.getresponse()
-            
-            if response.status == 200:
-                data = response.read()
-                data = json.loads(data)
-                conn.close()
-                return data
-            else:
-                raise Exception('Request failed')
+        conn = HTTPSConnection(MICROSOFT_AZURE_URL)
+        conn.request("POST", endpoint+"?%s" % params, self.data, headers)
+        response = conn.getresponse()
         
-        except Exception as e:
-            print('Error:')
-            print(e)
+        data = response.read()
+        data = json.loads(data)
+        conn.close()
+        
+        if response.status == 200:
+            return data
+        else:
+            raise Exception('Request failed. Message: ' + data['message'])
+        
         
     def label(self,n=1,backend=zAI_BACKEND):
         '''
@@ -243,7 +237,7 @@ class zImage:
         elif backend == 'local':
             raise NotImplementedError("label method is currently not available with local backend")
         else:
-            raise Exception('invalid backend selection. Valid values are currently "Google", "Microsoft" or "local".')
+            raise ValueError('invalid backend selection. Valid values are currently "Google", "Microsoft" or "local".')
             
         return labels
         
@@ -309,7 +303,7 @@ class zImage:
         elif backend == 'local':
             raise NotImplementedError('ocr method is currently not available with local backend')
         else:
-            raise Exception('invalid backend selection. Valid values are currently "Google", "Microsoft" or "local".')
+            raise ValueError('invalid backend selection. Valid values are currently "Google", "Microsoft" or "local".')
             
         # Postprocess text and generate resulting zText
         text = text.replace('\n',' ') #Remove line breaks
@@ -452,7 +446,7 @@ class zImage:
                     
                 self.faces.append({'rectangle': rectangle, 'landmarks': landmarks})
         else:
-            raise Exception('Invalid backend selection. Valid values are currently "Google", "Microsoft" or "local".')
+            raise ValueError('Invalid backend selection. Valid values are currently "Google", "Microsoft" or "local".')
             
     def extract_face(self, n = 0, margin = 5):
         '''
@@ -472,7 +466,7 @@ class zImage:
         # TO-DO: Let margin be a relative rather than absolute value
         num_faces = len(self.faces)
         if num_faces < n+1:
-            raise Exception('Requested %dth face (0-indexing), but only %d face/s were detected' % (n+1,num_faces))
+            raise IndexError('Requested %dth face (0-indexing), but only %d face/s were detected' % (n+1,num_faces))
         else:
             from zAI import zFace
             top = self.faces[n]['rectangle']['TOP_LEFT']
@@ -593,4 +587,4 @@ class zImage:
         if key_name in available_keys:
             exec('%s = "%s"' %(key_name, new_key), globals())
         else:
-            raise Exception('%s is not available.' % key_name)
+            raise ValueError('%s is not a valid key name.' % key_name)
