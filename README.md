@@ -1,11 +1,13 @@
 # zAI
 
 zAI (zero-effort Artificial Intelligence) is a Python library that allows any developer to perform high-level artificial intelligence tasks with easy-to-use commands, such that users do not need to have any knowledge about the underlying machine learning models or any of the technicalities involved. If we want to find all the faces in an image, we just need to type:
+
 *myImage.find_faces()*
+
 zAI automatically detects all faces present in *myImage* and returns face locations, facial landmarks, etc. No need of any knowledge about computer vision or machine learning.
 In the same way, we can translate text into a different language using *myText.translate()* or perform Optical Character Recognition (OCR) on an image using *myImage.ocr()*.
 
-zAI uses local pre-trained tensorflow models and/or cloud services provided by Google or Microsoft.
+zAI uses local pre-trained tensorflow models and/or cloud services provided by Google or Microsoft. In this initial release, there is a limited number of tasks that can be performed locally. As we further develop zAI, our focus will be in expanding this number.
 
 zAI is a side project of the R&D Team at [Biometric Vox](http://www.biometricvox.com). We were inspired by [this talk](https://vimeo.com/215418110) from Peter Norvig. We see zAI as a vision of how things should be in the near future.
 
@@ -19,6 +21,8 @@ Here, we will illustrate how to use zAI to:
 * Extract the text from an image using OCR
 * Translate the text to a different language
 * Convert the translated text to voice using speech synthesis
+
+(Note that in this example we have skipped the configuration steps. See [examples/Basics.ipynb](examples/Basics.ipynb) for a step-by-step tutorial.)
 
 Let's first import the modules to work with image and text data and create a zImage instance from an image file:
 
