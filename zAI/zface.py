@@ -18,6 +18,10 @@ class zFace(zImage):
     ----------
         im: image data as 3-dimensional ndarray. Shape is Height * Width * 3. Channels use BGR (Open-cv) convention
         
+        height: image height in pixels
+        
+        width: image width in pixels
+        
         data: image binary data
         
         faces: encodes information (if available) about the face detected on the image. If the zFace is created from scratch, it is initialized as an empty list.

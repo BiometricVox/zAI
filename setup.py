@@ -2,7 +2,7 @@ from setuptools import setup
 from setuptools import find_packages
 
 setup(name='zAI',
-      version='0.1',
+      version='0.1.1',
       description='zero effort Artificial Intelligence',
       author='Biometric Vox S.L.',
       url='https://github.com/BiometricVox/zAI',

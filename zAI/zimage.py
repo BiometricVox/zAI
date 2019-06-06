@@ -26,6 +26,10 @@ class zImage:
     ----------
         im: image data as 3-dimensional ndarray. Shape is Height * Width * 3. Channels use BGR (Open-cv) convention
         
+        height: image height in pixels
+        
+        width: image width in pixels
+        
         data: image binary data
         
         faces: encodes information (if available) about the faces detected on the image. It is initialized as an empty list.
@@ -64,6 +68,8 @@ class zImage:
         else:
             raise Exception('Wrong input. Expected a path direction or a 3-dim numpy array.')
         self.faces = []
+        self.height = self.im.shape[0]
+        self.width = self.im.shape[1]
         
     # @classmethod
     # def fromURL(cls, url):
